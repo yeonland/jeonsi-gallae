@@ -93,6 +93,7 @@ export function getQuickFilterConditions(quick) {
 
 export const SORT_OPTIONS = [
   { key: 'recommended', label: '추천순' },
+  { key: 'distance', label: '가까운 순' },
   { key: 'closing', label: '마감 임박순' },
   { key: 'recent', label: '최근 시작순' },
   { key: 'title', label: '이름순' },
@@ -100,8 +101,6 @@ export const SORT_OPTIONS = [
 
 // 곧 종료: 오늘부터 14일 안에 끝나는 전시
 const CLOSING_DAYS = 14
-// 최근 시작: 시작한 지 30일 이내인 전시
-const RECENT_DAYS = 30
 
 function matchesStatus(exhibition, status) {
   if (status === 'any') return true
@@ -117,31 +116,78 @@ function matchesStatus(exhibition, status) {
   return daysLeft >= 0
 }
 
-// 추천순 그룹: 곧 종료 → 최근 시작 → 그 외 진행 중 → 예정 → 종료
-function getRecommendGroup(exhibition) {
+// 찜한 전시에서 자주 고른 지역·기관을 뽑아 추천 점수에 반영한다
+function buildTasteProfile(favorites = []) {
+  return {
+    regions: new Set(favorites.map((item) => item.region).filter(Boolean)),
+    institutions: new Set(
+      favorites.map((item) => item.institution).filter(Boolean)
+    ),
+    ids: new Set(favorites.map((item) => item.id)),
+  }
+}
+
+// 추천 점수: 새로 시작한 전시와 내 취향을 가장 크게 반영하고,
+// 마감 임박은 보조 점수로만 써서 마감 임박순과 결과가 달라지게 한다
+export function getRecommendScore(exhibition, profile) {
   const today = getToday()
   const daysSinceStart = (today - toDate(exhibition.startDate)) / DAY
   const daysLeft = getDaysLeft(exhibition.endDate)
+  const duration =
+    (toDate(exhibition.endDate) - toDate(exhibition.startDate)) / DAY
 
-  if (daysLeft < 0) return 4
-  if (daysSinceStart < 0) return 3
-  if (daysLeft <= CLOSING_DAYS) return 0
-  if (daysSinceStart <= RECENT_DAYS) return 1
+  if (daysLeft < 0) return -100
 
-  return 2
+  let score = 0
+
+  // 새로 시작한 전시
+  if (daysSinceStart >= 0 && daysSinceStart <= 14) score += 3
+  else if (daysSinceStart >= 0 && daysSinceStart <= 30) score += 2
+
+  // 곧 열리는 전시는 조금, 한참 뒤에 열리는 전시는 뒤로
+  if (daysSinceStart < 0) score += daysSinceStart >= -14 ? 1 : -1
+
+  // 놓치기 전에 볼 전시
+  if (daysSinceStart >= 0 && daysLeft <= 7) score += 2
+  else if (daysSinceStart >= 0 && daysLeft <= CLOSING_DAYS) score += 1
+
+  // 무료 전시
+  if (isFree(exhibition)) score += 1
+
+  // 1년 넘게 하는 상설전 성격의 전시는 언제든 갈 수 있으니 뒤로
+  if (duration > 365) score -= 2
+
+  // 내가 찜한 전시와 같은 기관·지역 (이미 찜한 전시는 제외)
+  if (profile && !profile.ids.has(exhibition.id)) {
+    if (profile.institutions.has(exhibition.institution)) score += 4
+    else if (profile.regions.has(exhibition.region)) score += 3
+  }
+
+  return score
 }
 
-function compareRecommended(a, b) {
-  const groupA = getRecommendGroup(a)
-  const groupB = getRecommendGroup(b)
+// 두 좌표 사이 거리(km)
+function getDistanceKm(from, to) {
+  const toRad = (value) => (value * Math.PI) / 180
+  const dLat = toRad(to.lat - from.lat)
+  const dLng = toRad(to.lng - from.lng)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.sin(dLng / 2) ** 2
 
-  if (groupA !== groupB) return groupA - groupB
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
 
-  // 곧 종료·그 외 진행 중은 빨리 끝나는 순, 최근 시작은 최신순, 예정은 빨리 열리는 순
-  if (groupA === 1) return b.startDate.localeCompare(a.startDate)
-  if (groupA === 3) return a.startDate.localeCompare(b.startDate)
+// API의 gpsX는 경도, gpsY는 위도
+export function getExhibitionDistance(exhibition, location) {
+  const lat = Number.parseFloat(exhibition.gpsY)
+  const lng = Number.parseFloat(exhibition.gpsX)
 
-  return a.endDate.localeCompare(b.endDate)
+  if (!location || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return null
+  }
+
+  return getDistanceKm(location, { lat, lng })
 }
 
 function matchesKeyword(exhibition, keyword) {
@@ -155,16 +201,53 @@ function matchesKeyword(exhibition, keyword) {
   ].some((value) => value.toLowerCase().includes(keyword))
 }
 
-const sorters = {
-  recommended: compareRecommended,
-  closing: (a, b) => a.endDate.localeCompare(b.endDate),
-  recent: (a, b) => b.startDate.localeCompare(a.startDate),
-  title: (a, b) => a.title.localeCompare(b.title, 'ko'),
+function getSorter(sort, { favorites, location }) {
+  if (sort === 'recommended') {
+    const profile = buildTasteProfile(favorites)
+    const scores = new Map()
+    const scoreOf = (exhibition) => {
+      if (!scores.has(exhibition.id)) {
+        scores.set(exhibition.id, getRecommendScore(exhibition, profile))
+      }
+
+      return scores.get(exhibition.id)
+    }
+
+    // 점수가 같으면 최근 시작한 전시부터
+    return (a, b) =>
+      scoreOf(b) - scoreOf(a) || b.startDate.localeCompare(a.startDate)
+  }
+
+  if (sort === 'distance') {
+    // 위치 정보가 없는 전시는 맨 뒤로
+    const distanceOf = (exhibition) =>
+      getExhibitionDistance(exhibition, location) ?? Infinity
+
+    return (a, b) => distanceOf(a) - distanceOf(b)
+  }
+
+  const sorters = {
+    closing: (a, b) => a.endDate.localeCompare(b.endDate),
+    recent: (a, b) => b.startDate.localeCompare(a.startDate),
+    title: (a, b) => a.title.localeCompare(b.title, 'ko'),
+  }
+
+  return sorters[sort] || sorters.closing
 }
 
 export function filterExhibitions(
   exhibitions,
-  { keyword, status, region, weekendOnly, freeOnly, visitDate, sort }
+  {
+    keyword,
+    status,
+    region,
+    weekendOnly,
+    freeOnly,
+    visitDate,
+    sort,
+    favorites,
+    location,
+  }
 ) {
   const normalizedKeyword = keyword.trim().toLowerCase()
 
@@ -178,7 +261,7 @@ export function filterExhibitions(
         (!freeOnly || isFree(exhibition)) &&
         (!visitDate || isOpenOnDate(exhibition, visitDate))
     )
-    .sort(sorters[sort])
+    .sort(getSorter(sort, { favorites, location }))
 }
 
 // 데이터에 있는 지역을 전시 수가 많은 순으로

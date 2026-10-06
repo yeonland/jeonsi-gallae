@@ -294,6 +294,11 @@
   font-size: 0.8125rem;
 }
 
+.exhibition-card-info .distance {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
 .exhibition-card-info .price-free {
   color: var(--color-ongoing);
   font-weight: 700;

@@ -1,7 +1,18 @@
 import { getExhibitionStatus } from '../utils/getExhibitionStatus'
 import { getDaysLeft, getPriceLabel } from '../utils/exhibitionFilters'
 
-function ExhibitionCard({ exhibition, isFavorite, onToggleFavorite }) {
+function formatDistance(km) {
+  if (km < 1) return `${Math.round(km * 1000)}m`
+
+  return `${km < 10 ? km.toFixed(1) : Math.round(km)}km`
+}
+
+function ExhibitionCard({
+  exhibition,
+  isFavorite,
+  onToggleFavorite,
+  distance = null,
+}) {
   const status = getExhibitionStatus(
     exhibition.startDate,
     exhibition.endDate
@@ -74,6 +85,9 @@ function ExhibitionCard({ exhibition, isFavorite, onToggleFavorite }) {
         </p>
 
         <div className="exhibition-card-info">
+          {distance !== null && (
+            <span className="distance">{formatDistance(distance)}</span>
+          )}
           <span>{exhibition.region}</span>
           {exhibition.sigungu && <span>{exhibition.sigungu}</span>}
           {priceLabel && (

@@ -10,6 +10,7 @@ import {
   SORT_OPTIONS,
   QUICK_FILTERS,
   filterExhibitions,
+  getExhibitionDistance,
   getQuickFilterConditions,
   getRegions,
   getTodayString,
@@ -34,6 +35,8 @@ function App() {
   const [filters, setFilters] = useState(INITIAL_FILTERS)
   const [view, setView] = useState('all')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [location, setLocation] = useState(null)
+  const [locationStatus, setLocationStatus] = useState('idle')
   const { favorites, favoriteIds, toggleFavorite } = useFavorites()
 
   useEffect(() => {
@@ -83,6 +86,36 @@ function App() {
     setVisibleCount(PAGE_SIZE)
   }
 
+  // 가까운 순을 고를 때만 위치 권한을 요청한다
+  function requestLocation() {
+    if (location) return
+
+    if (!navigator.geolocation) {
+      setLocationStatus('unsupported')
+      return
+    }
+
+    setLocationStatus('loading')
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        })
+        setLocationStatus('ready')
+      },
+      () => setLocationStatus('denied'),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
+    )
+  }
+
+  function changeSort(nextSort) {
+    updateFilter('sort', nextSort)
+
+    if (nextSort === 'distance') requestLocation()
+  }
+
   function resetFilters() {
     setFilters(INITIAL_FILTERS)
     setVisibleCount(PAGE_SIZE)
@@ -114,7 +147,17 @@ function App() {
       view === 'favorites' && quickConditions.status === 'all'
         ? 'any'
         : quickConditions.status,
+    favorites,
+    location,
   })
+
+  const isDistanceSort = filters.sort === 'distance' && Boolean(location)
+
+  const locationMessage = {
+    loading: '현재 위치를 확인하는 중이에요',
+    denied: '위치 권한이 없어 거리순으로 정렬할 수 없어요. 브라우저에서 위치 권한을 허용해 주세요',
+    unsupported: '이 브라우저는 위치 정보를 지원하지 않아요',
+  }[locationStatus]
 
   const visibleExhibitions = filteredExhibitions.slice(0, visibleCount)
 
@@ -292,7 +335,7 @@ function App() {
                 id="sort"
                 value={filters.sort}
                 onChange={(event) =>
-                  updateFilter('sort', event.target.value)
+                  changeSort(event.target.value)
                 }
               >
                 {SORT_OPTIONS.map((option) => (
@@ -316,6 +359,9 @@ function App() {
                 <span className="result-note">
                   관람료 정보를 일부 불러오지 못했어요
                 </span>
+              )}
+              {filters.sort === 'distance' && locationMessage && (
+                <span className="result-note">{locationMessage}</span>
               )}
               {isFiltered && (
                 <button type="button" onClick={resetFilters}>
@@ -348,6 +394,11 @@ function App() {
                   exhibition={exhibition}
                   isFavorite={favoriteIds.has(exhibition.id)}
                   onToggleFavorite={toggleFavorite}
+                  distance={
+                    isDistanceSort
+                      ? getExhibitionDistance(exhibition, location)
+                      : null
+                  }
                 />
               ))}
           </div>
