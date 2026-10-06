@@ -1,47 +1,68 @@
 import { getExhibitionStatus } from '../utils/getExhibitionStatus'
+import { getDaysLeft } from '../utils/exhibitionFilters'
 
-function ExhibitionCard({ exhibition }) {
+function ExhibitionCard({ exhibition, isFavorite, onToggleFavorite }) {
   const status = getExhibitionStatus(
     exhibition.startDate,
     exhibition.endDate
   )
 
-  const formattedPrice =
-    exhibition.price == null
-      ? '가격 확인'
-      : exhibition.price === 0
-        ? '무료'
-        : `${exhibition.price.toLocaleString()}원`
+  const daysLeft = getDaysLeft(exhibition.endDate)
+
+  const linkUrl =
+    `/api/culture-link?seq=${encodeURIComponent(exhibition.id)}` +
+    `&title=${encodeURIComponent(exhibition.title)}`
 
   return (
     <article className="exhibition-card">
-      <div className="exhibition-card-poster">
+      <a
+        className="exhibition-card-poster"
+        href={linkUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`${exhibition.title} 상세 페이지 열기 (새 창)`}
+      >
         {exhibition.thumbnail ? (
           <img
             src={exhibition.thumbnail}
-            alt={`${exhibition.title} 포스터`}
+            alt=""
+            loading="lazy"
           />
         ) : (
           <strong>{exhibition.title}</strong>
         )}
-      </div>
+      </a>
 
       <div className="exhibition-card-content">
         <div className="exhibition-card-top">
-          <span className={`status-badge status-badge-${status.key}`}>
-            {status.label}
-          </span>
+          <div className="exhibition-card-badges">
+            <span className={`status-badge status-badge-${status.key}`}>
+              {status.label}
+            </span>
+
+            {status.key === 'ongoing' && daysLeft <= 14 && (
+              <span className="status-badge status-badge-closing">
+                {daysLeft === 0 ? '오늘 종료' : `D-${daysLeft}`}
+              </span>
+            )}
+          </div>
 
           <button
             type="button"
-            className="favorite-button"
-            aria-label={`${exhibition.title} 찜하기`}
+            className={`favorite-button${isFavorite ? ' is-active' : ''}`}
+            aria-label={`${exhibition.title} ${isFavorite ? '찜 해제' : '찜하기'}`}
+            aria-pressed={isFavorite}
+            onClick={() => onToggleFavorite(exhibition)}
           >
-            ♡
+            {isFavorite ? '♥' : '♡'}
           </button>
         </div>
 
-        <h3>{exhibition.title}</h3>
+        <h3>
+          <a href={linkUrl} target="_blank" rel="noopener noreferrer">
+            {exhibition.title}
+          </a>
+        </h3>
 
         <p className="exhibition-card-institution">
           {exhibition.institution}
@@ -53,8 +74,7 @@ function ExhibitionCard({ exhibition }) {
 
         <div className="exhibition-card-info">
           <span>{exhibition.region}</span>
-          <span>{exhibition.category}</span>
-          <span>{formattedPrice}</span>
+          {exhibition.sigungu && <span>{exhibition.sigungu}</span>}
         </div>
       </div>
     </article>

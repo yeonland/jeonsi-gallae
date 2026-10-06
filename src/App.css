@@ -2,17 +2,26 @@
   min-height: 100vh;
 }
 
-.header {
+.header,
+.hero,
+.exhibition-section {
   width: min(var(--content-width), calc(100% - var(--page-gutter) * 2));
-  height: 60px;
   margin: 0 auto;
+}
+
+/* 헤더 */
+
+.header {
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   border-bottom: 1px solid var(--color-line);
 }
 
 .logo {
+  flex-shrink: 0;
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.05em;
@@ -24,13 +33,36 @@
 }
 
 .nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.9375rem;
+  white-space: nowrap;
 }
 
+.nav a:hover,
+.nav a:focus-visible {
+  color: var(--color-primary);
+}
+
+.nav-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* 히어로·검색 */
+
 .hero {
-  width: min(var(--content-width), calc(100% - var(--page-gutter) * 2));
-  margin: 0 auto;
-  padding: 28px 0 20px;
+  padding: 28px 0 24px;
 }
 
 .hero-eyebrow {
@@ -41,20 +73,10 @@
 }
 
 .hero h1 {
-  max-width: 720px;
   margin: 0;
   font-size: 1.875rem;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.05em;
-  word-break: keep-all;
-}
-
-.hero-description {
-  max-width: 600px;
-  margin: 8px 0 0;
-  color: var(--color-text-secondary);
-  font-size: 0.9375rem;
-  line-height: 1.7;
   word-break: keep-all;
 }
 
@@ -62,8 +84,8 @@
   max-width: 720px;
   margin-top: 18px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 120px;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 100px;
+  gap: 8px;
 }
 
 .search-box input {
@@ -93,62 +115,126 @@
   font-weight: 700;
 }
 
-.quick-filter {
-  margin-top: 12px;
+/* 목록 영역 */
+
+.exhibition-section {
+  padding: 0 0 80px;
+}
+
+.view-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.view-tabs button {
+  height: 48px;
+  margin-bottom: -1px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.view-tabs button span {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.view-tabs button.is-active {
+  border-bottom-color: var(--color-text);
+  color: var(--color-text);
+}
+
+.filter-bar {
+  padding: 16px 0 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filter-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.quick-filter button {
+.filter-chips button {
   min-height: 34px;
   padding: 0 14px;
   border: 1px solid var(--color-line);
-  border-radius: 5px;
+  border-radius: 17px;
   background: var(--color-surface);
   color: var(--color-text);
   font-size: 0.8125rem;
+  white-space: nowrap;
 }
 
-.quick-filter button:hover,
-.quick-filter button:focus-visible {
+.filter-chips button:hover,
+.filter-chips button:focus-visible {
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
 
-.exhibition-section {
-  width: min(var(--content-width), calc(100% - var(--page-gutter) * 2));
-  margin: 0 auto;
-  padding: 24px 0 80px;
-  border-top: 1px solid var(--color-line);
+.filter-chips button.is-active {
+  border-color: var(--color-text);
+  background: var(--color-text);
+  color: var(--color-surface);
 }
 
-.section-heading {
-  margin-bottom: 16px;
+.filter-selects {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  gap: 8px;
 }
 
-.section-heading-eyebrow {
-  margin: 0 0 6px;
-  color: var(--color-primary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+.filter-selects select {
+  height: 34px;
+  padding: 0 28px 0 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 5px;
+  background: var(--color-surface)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236f6a64' stroke-width='1.5'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  appearance: none;
+  cursor: pointer;
 }
 
-.section-heading h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  line-height: 1.3;
-  letter-spacing: -0.05em;
+.filter-selects select:focus-visible {
+  border-color: var(--color-primary);
+  outline: none;
 }
 
-.section-heading a {
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--color-text);
+.result-summary {
+  margin: 0 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
+}
+
+.result-summary strong {
+  color: var(--color-text);
+}
+
+.result-summary button {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
 }
 
 .exhibition-grid {
@@ -167,9 +253,152 @@
   word-break: keep-all;
 }
 
+/* 전시 카드 */
+
 .exhibition-card {
   min-width: 0;
 }
+
+.exhibition-card-poster {
+  aspect-ratio: 3 / 4;
+  padding: 16px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: #eee9e2;
+}
+
+.exhibition-card-poster:has(img) {
+  padding: 0;
+}
+
+.exhibition-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.exhibition-card-poster:hover img,
+.exhibition-card-poster:focus-visible img {
+  transform: scale(1.04);
+}
+
+.exhibition-card-poster strong {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  letter-spacing: -0.05em;
+  word-break: keep-all;
+}
+
+.exhibition-card-content {
+  padding-top: 14px;
+}
+
+.exhibition-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.exhibition-card-badges {
+  display: flex;
+  gap: 4px;
+}
+
+.status-badge {
+  min-height: 24px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status-badge-ongoing {
+  color: var(--color-ongoing);
+  background: var(--color-ongoing-bg);
+}
+
+.status-badge-upcoming {
+  color: var(--color-upcoming);
+  background: var(--color-upcoming-bg);
+}
+
+.status-badge-ended {
+  color: var(--color-ended);
+  background: var(--color-ended-bg);
+}
+
+.status-badge-closing {
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.favorite-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.favorite-button:hover,
+.favorite-button.is-active {
+  color: var(--color-primary);
+}
+
+.favorite-button:active {
+  transform: scale(0.85);
+}
+
+.exhibition-card h3 {
+  margin: 8px 0 6px;
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.exhibition-card h3 a:hover,
+.exhibition-card h3 a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.exhibition-card-institution {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.exhibition-card-date {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+}
+
+.exhibition-card-info {
+  margin-top: 10px;
+  padding-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-top: 1px solid var(--color-line);
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.exhibition-card-info span:not(:last-child)::after {
+  margin-left: 10px;
+  content: '·';
+}
+
+/* 더보기 */
 
 .load-more-button {
   min-width: 200px;
@@ -205,110 +434,6 @@
   color: var(--color-line);
 }
 
-.exhibition-card-poster {
-  aspect-ratio: 3 / 4;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-}
-
-.exhibition-card-poster span {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
-
-.exhibition-card-poster strong {
-  max-width: 200px;
-  font-size: 1.125rem;
-  line-height: 1.3;
-  letter-spacing: -0.05em;
-  word-break: keep-all;
-}
-
-.exhibition-card-content {
-  padding-top: 14px;
-}
-
-.exhibition-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.status-badge {
-  min-height: 24px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.status-badge-ongoing {
-  color: var(--color-ongoing);
-  background: var(--color-ongoing-bg);
-}
-
-.status-badge-upcoming {
-  color: var(--color-upcoming);
-  background: var(--color-upcoming-bg);
-}
-
-.status-badge-ended {
-  color: var(--color-ended);
-  background: var(--color-ended-bg);
-}
-
-.favorite-button {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-text);
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.exhibition-card h3 {
-  margin: 8px 0 6px;
-  font-size: 1.0625rem;
-  line-height: 1.4;
-  letter-spacing: -0.03em;
-  word-break: keep-all;
-}
-
-.exhibition-card-institution {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-}
-
-.exhibition-card-date {
-  margin: 8px 0 0;
-  font-size: 0.8125rem;
-}
-
-.exhibition-card-info {
-  margin-top: 10px;
-  padding-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  border-top: 1px solid var(--color-line);
-  color: var(--color-text-secondary);
-  font-size: 0.8125rem;
-}
-
-.exhibition-card-info span:not(:last-child)::after {
-  margin-left: 10px;
-  content: '·';
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -319,6 +444,8 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* 반응형 */
 
 @media (max-width: 1100px) {
   .exhibition-grid {
@@ -362,33 +489,21 @@
   }
 
   .hero-eyebrow {
-    margin-bottom: 8px;
     font-size: 0.8125rem;
   }
 
   .hero h1 {
-    font-size: 1.5rem;
-  }
-
-  .hero-description {
-    margin-top: 8px;
-    font-size: 0.875rem;
+    font-size: 1.375rem;
   }
 
   .search-box {
     margin-top: 14px;
-    grid-template-columns: minmax(0, 1fr) 96px;
-    gap: 8px;
-  }
-
-  .search-box input,
-  .search-box button {
-    height: 44px;
+    grid-template-columns: minmax(0, 1fr) 72px;
   }
 
   .search-box input {
     padding: 0 12px;
-    font-size: 0.875rem;
+    font-size: 1rem; /* iOS에서 16px 미만이면 확대됨 */
   }
 
   .search-box button {
@@ -396,21 +511,49 @@
     font-size: 0.875rem;
   }
 
-  .quick-filter button {
-    min-height: 32px;
-    padding: 0 12px;
+  .view-tabs {
+    gap: 20px;
   }
 
-  .exhibition-section {
-    padding: 20px 0 60px;
+  .view-tabs button {
+    height: 44px;
+    font-size: 1rem;
   }
 
-  .section-heading {
-    margin-bottom: 16px;
+  .filter-bar {
+    padding: 12px 0 10px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 10px;
   }
 
-  .section-heading h2 {
-    font-size: 1.25rem;
+  /* 칩이 여러 줄로 늘어나지 않게 가로 스크롤 */
+  .filter-chips {
+    margin: 0 calc(var(--page-gutter) * -1);
+    padding: 0 var(--page-gutter);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-chips button {
+    flex-shrink: 0;
+  }
+
+  .filter-selects select {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    font-size: 0.875rem;
+  }
+
+  .result-summary {
+    margin-bottom: 12px;
   }
 
   .exhibition-grid {
@@ -431,84 +574,76 @@
     border-top: 1px solid var(--color-line);
   }
 
-  .exhibition-card h3 {
-    margin: 4px 0 6px;
-    font-size: 1rem;
-    line-height: 1.35;
-    letter-spacing: -0.03em;
-
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-  }
-
   .exhibition-card-poster {
-    width: 100%;
-    aspect-ratio: 3 / 4;
-    overflow: hidden;
-    background: #eee9e2;
-  }
-
-  .exhibition-card-poster img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-  }
-
-  .exhibition-card-poster span {
-    display: none;
+    padding: 8px;
   }
 
   .exhibition-card-poster strong {
     font-size: 0.8125rem;
-    line-height: 1.3;
     letter-spacing: -0.03em;
   }
 
   .exhibition-card-content {
     min-width: 0;
     padding-top: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
   }
 
-  .exhibition-card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .exhibition-card h3 {
+    margin: 4px 0 6px;
+    font-size: 1rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
   }
 
   .status-badge {
     min-height: 22px;
-    padding: 0 8px;
     font-size: 0.6875rem;
   }
 
   .favorite-button {
-    width: 28px;
-    height: 28px;
-    font-size: 1.125rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-right: -8px;
+    font-size: 1.25rem;
   }
 
-  .exhibition-card-institution {
+  .exhibition-card-institution,
+  .exhibition-card-date {
     font-size: 0.8125rem;
-    margin: 0;
   }
 
   .exhibition-card-date {
-    margin: 6px 0 0;
-    font-size: 0.8125rem;
-    line-height: 1.5;
+    margin-top: 4px;
   }
 
   .exhibition-card-info {
+    margin-top: 8px;
+    padding-top: 0;
     gap: 8px;
+    border-top: 0;
     font-size: 0.75rem;
+  }
+
+  .exhibition-card-info span:not(:last-child)::after {
+    margin-left: 8px;
+  }
+
+  .load-more-button {
+    width: 100%;
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav {
+    gap: 12px;
+  }
+
+  .exhibition-card {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 12px;
   }
 }

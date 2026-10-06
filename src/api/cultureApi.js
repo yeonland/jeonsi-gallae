@@ -64,8 +64,11 @@ export async function getCultureExhibitions() {
           item.querySelector('place')?.textContent || ''
         ),
 
+        // '서울시'처럼 표기가 섞여 있어 '시'를 떼고 통일
         region:
-          item.querySelector('area')?.textContent || '',
+          (item.querySelector('area')?.textContent || '')
+            .trim()
+            .replace(/시$/, '') || '기타',
 
         sigungu:
           item.querySelector('sigungu')?.textContent || '',
