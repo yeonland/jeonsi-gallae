@@ -7,15 +7,19 @@ export default async function handler(request, response) {
     })
   }
 
-  const currentYear = new Date().getFullYear()
+  // from~to 사이에 시작일 또는 종료일이 있는 항목이 조회되므로
+  // 오늘부터 먼 미래까지로 잡아 진행 중·예정 전시만 받아온다
+  const today = new Date()
+    .toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })
+    .replaceAll('-', '')
 
   const url =
     'https://apis.data.go.kr/B553457/cultureinfo/period2' +
     `?serviceKey=${serviceKey}` +
     '&PageNo=1' +
-    '&numOfrows=100' +
-    `&from=${currentYear}0101` +
-    `&to=${currentYear}1231` +
+    '&numOfrows=1000' +
+    `&from=${today}` +
+    '&to=20991231' +
     '&serviceTp=A'
 
   try {
@@ -30,6 +34,12 @@ export default async function handler(request, response) {
     response.setHeader(
       'Content-Type',
       'application/xml; charset=utf-8'
+    )
+
+    // 같은 응답을 1시간 동안 CDN에 캐시해 API 호출 수를 줄인다
+    response.setHeader(
+      'Cache-Control',
+      's-maxage=3600, stale-while-revalidate=86400'
     )
 
     return response.status(200).send(xmlText)

@@ -133,6 +133,16 @@ function App() {
 
             {!isLoading &&
               !error &&
+              filteredExhibitions.length === 0 && (
+                <p className="exhibition-empty">
+                  {exhibitions.length === 0
+                    ? '지금 볼 수 있는 전시 정보가 없습니다.'
+                    : `'${searchKeyword.trim()}'에 맞는 전시가 없습니다. 다른 검색어로 찾아보세요.`}
+                </p>
+              )}
+
+            {!isLoading &&
+              !error &&
               filteredExhibitions.map((exhibition) => (
                 <ExhibitionCard
                   key={exhibition.id}
