@@ -65,14 +65,12 @@ jeonsi-gallae/
 │  ├─ culture.js              # 전시 목록 조회 서버리스 함수
 │  ├─ culture-link.js         # 상세 API로 공식 페이지를 찾아 리다이렉트
 │  └─ culture-prices.js       # 관람료를 30개씩 나눠 수집
-├─ public/                    # 정적 파일
+├─ public/                    # 파비콘 등 정적 파일
 ├─ src/
 │  ├─ api/
 │  │  └─ cultureApi.js        # XML 파싱 및 전시 데이터 변환
 │  ├─ components/
 │  │  └─ ExhibitionCard.jsx   # 전시 카드 (포스터 링크, 찜 버튼, D-day)
-│  ├─ data/
-│  │  └─ exhibitions.js       # 초기 목업 데이터
 │  ├─ hooks/
 │  │  └─ useFavorites.js      # 찜한 전시 localStorage 저장
 │  ├─ utils/
