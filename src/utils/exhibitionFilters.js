@@ -73,12 +73,23 @@ export function isOpenOnWeekend(exhibition) {
   )
 }
 
-export const STATUS_FILTERS = [
+// 칩은 하나만 고를 수 있으며, 고른 칩을 필터 조건으로 바꿔 쓴다
+export const QUICK_FILTERS = [
   { key: 'all', label: '전체' },
   { key: 'ongoing', label: '전시 중' },
   { key: 'closing', label: '곧 종료' },
   { key: 'upcoming', label: '전시 예정' },
+  { key: 'weekend', label: '이번 주말 관람 가능' },
+  { key: 'free', label: '무료' },
 ]
+
+export function getQuickFilterConditions(quick) {
+  return {
+    status: ['ongoing', 'closing', 'upcoming'].includes(quick) ? quick : 'all',
+    weekendOnly: quick === 'weekend',
+    freeOnly: quick === 'free',
+  }
+}
 
 export const SORT_OPTIONS = [
   { key: 'recommended', label: '추천순' },

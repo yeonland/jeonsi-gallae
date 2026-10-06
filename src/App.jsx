@@ -8,8 +8,9 @@ import {
 import { useFavorites } from './hooks/useFavorites'
 import {
   SORT_OPTIONS,
-  STATUS_FILTERS,
+  QUICK_FILTERS,
   filterExhibitions,
+  getQuickFilterConditions,
   getRegions,
   getTodayString,
 } from './utils/exhibitionFilters'
@@ -18,10 +19,8 @@ const PAGE_SIZE = 12
 
 const INITIAL_FILTERS = {
   keyword: '',
-  status: 'all',
+  quick: 'all',
   region: 'all',
-  weekendOnly: false,
-  freeOnly: false,
   visitDate: '',
   sort: 'recommended',
 }
@@ -106,12 +105,15 @@ function App() {
   )
 
   // 찜 목록은 종료된 전시도 남겨 두고, 나머지 조건만 적용
+  const quickConditions = getQuickFilterConditions(filters.quick)
+
   const filteredExhibitions = filterExhibitions(baseList, {
     ...filters,
+    ...quickConditions,
     status:
-      view === 'favorites' && filters.status === 'all'
+      view === 'favorites' && quickConditions.status === 'all'
         ? 'any'
-        : filters.status,
+        : quickConditions.status,
   })
 
   const visibleExhibitions = filteredExhibitions.slice(0, visibleCount)
@@ -212,45 +214,37 @@ function App() {
           </div>
 
           <div className="filter-bar">
-            <div className="filter-chips" aria-label="전시 상태">
-              {STATUS_FILTERS.map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  aria-pressed={filters.status === option.key}
-                  className={filters.status === option.key ? 'is-active' : ''}
-                  onClick={() => updateFilter('status', option.key)}
-                >
-                  {option.label}
-                </button>
-              ))}
+            <div
+              className="filter-chips"
+              role="radiogroup"
+              aria-label="빠른 필터"
+            >
+              {QUICK_FILTERS.map((option) => {
+                const isActive = filters.quick === option.key
 
-              <button
-                type="button"
-                aria-pressed={filters.weekendOnly}
-                className={filters.weekendOnly ? 'is-active' : ''}
-                onClick={() =>
-                  updateFilter('weekendOnly', !filters.weekendOnly)
-                }
-              >
-                이번 주말 관람 가능
-              </button>
-
-              <button
-                type="button"
-                aria-pressed={filters.freeOnly}
-                className={filters.freeOnly ? 'is-active' : ''}
-                onClick={() => updateFilter('freeOnly', !filters.freeOnly)}
-              >
-                무료
-                {isPriceLoading && (
-                  <span className="chip-note">
-                    {priceProgress
-                      ? `확인 중 ${priceProgress.page}/${priceProgress.totalPages}`
-                      : '확인 중'}
-                  </span>
-                )}
-              </button>
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    className={isActive ? 'is-active' : ''}
+                    // 선택된 칩을 다시 누르면 전체로 돌아간다
+                    onClick={() =>
+                      updateFilter('quick', isActive ? 'all' : option.key)
+                    }
+                  >
+                    {option.label}
+                    {option.key === 'free' && isPriceLoading && (
+                      <span className="chip-note">
+                        {priceProgress
+                          ? `확인 중 ${priceProgress.page}/${priceProgress.totalPages}`
+                          : '확인 중'}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
 
             <div className="filter-selects">
@@ -313,12 +307,12 @@ function App() {
           {!isLoading && !error && (
             <p className="result-summary" aria-live="polite">
               <strong>{filteredExhibitions.length}</strong>개의 전시
-              {filters.freeOnly && isPriceLoading && (
+              {filters.quick === 'free' && isPriceLoading && (
                 <span className="result-note">
                   관람료를 확인하는 중이라 결과가 늘어날 수 있어요
                 </span>
               )}
-              {filters.freeOnly && priceProgress?.failed && (
+              {filters.quick === 'free' && priceProgress?.failed && (
                 <span className="result-note">
                   관람료 정보를 일부 불러오지 못했어요
                 </span>
