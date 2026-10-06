@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/culture-prices.js": {
+      "maxDuration": 60
+    }
+  }
+}

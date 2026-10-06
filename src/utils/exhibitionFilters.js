@@ -33,6 +33,37 @@ export function getDaysLeft(endDate) {
   return Math.round((toDate(endDate) - getToday()) / DAY)
 }
 
+export function getTodayString() {
+  const today = getToday()
+  const pad = (value) => String(value).padStart(2, '0')
+
+  return `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
+}
+
+export function isOpenOnDate(exhibition, dateString) {
+  return (
+    exhibition.startDate <= dateString &&
+    exhibition.endDate >= dateString
+  )
+}
+
+// '무료', '무료 (사전예약)'처럼 무료로 시작하는 경우만 무료로 본다
+// ('성인 3,000원 … 한시적 무료' 같은 안내 문구는 제외)
+export function isFree(exhibition) {
+  const price = exhibition.price?.trim() || ''
+
+  return /^무료/.test(price) || /^0원/.test(price)
+}
+
+export function getPriceLabel(exhibition) {
+  if (exhibition.price === undefined) return ''
+  if (isFree(exhibition)) return '무료'
+  if (!exhibition.price) return '관람료 문의'
+
+  // 금액 안내가 길면 첫 항목만 보여준다
+  return exhibition.price.split(/[/\n(]/)[0].trim()
+}
+
 export function isOpenOnWeekend(exhibition) {
   const { saturday, sunday } = getThisWeekend()
 
@@ -122,7 +153,7 @@ const sorters = {
 
 export function filterExhibitions(
   exhibitions,
-  { keyword, status, region, weekendOnly, sort }
+  { keyword, status, region, weekendOnly, freeOnly, visitDate, sort }
 ) {
   const normalizedKeyword = keyword.trim().toLowerCase()
 
@@ -132,7 +163,9 @@ export function filterExhibitions(
         matchesStatus(exhibition, status) &&
         matchesKeyword(exhibition, normalizedKeyword) &&
         (region === 'all' || exhibition.region === region) &&
-        (!weekendOnly || isOpenOnWeekend(exhibition))
+        (!weekendOnly || isOpenOnWeekend(exhibition)) &&
+        (!freeOnly || isFree(exhibition)) &&
+        (!visitDate || isOpenOnDate(exhibition, visitDate))
     )
     .sort(sorters[sort])
 }

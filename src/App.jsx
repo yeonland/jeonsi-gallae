@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import ExhibitionCard from './components/ExhibitionCard'
-import { getCultureExhibitions } from './api/cultureApi'
+import {
+  getCultureExhibitions,
+  getExhibitionPrices,
+} from './api/cultureApi'
 import { useFavorites } from './hooks/useFavorites'
 import {
   SORT_OPTIONS,
   STATUS_FILTERS,
   filterExhibitions,
   getRegions,
+  getTodayString,
 } from './utils/exhibitionFilters'
 
 const PAGE_SIZE = 12
@@ -17,6 +21,8 @@ const INITIAL_FILTERS = {
   status: 'all',
   region: 'all',
   weekendOnly: false,
+  freeOnly: false,
+  visitDate: '',
   sort: 'recommended',
 }
 
@@ -24,6 +30,8 @@ function App() {
   const [exhibitions, setExhibitions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [prices, setPrices] = useState({})
+  const [priceProgress, setPriceProgress] = useState(null)
   const [filters, setFilters] = useState(INITIAL_FILTERS)
   const [view, setView] = useState('all')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
@@ -49,6 +57,28 @@ function App() {
     loadExhibitions()
   }, [])
 
+  // 목록을 먼저 보여주고, 관람료는 뒤에서 이어서 받아 합친다
+  useEffect(() => {
+    const controller = new AbortController()
+
+    getExhibitionPrices((pagePrices, progress) => {
+      setPrices((current) => ({ ...current, ...pagePrices }))
+      setPriceProgress(progress)
+    }, controller.signal).catch((error) => {
+      if (error.name !== 'AbortError') {
+        console.error(error)
+        setPriceProgress({ failed: true })
+      }
+    })
+
+    return () => controller.abort()
+  }, [])
+
+  const isPriceLoading =
+    !priceProgress ||
+    (!priceProgress.failed &&
+      priceProgress.page < priceProgress.totalPages)
+
   function updateFilter(name, value) {
     setFilters((current) => ({ ...current, [name]: value }))
     setVisibleCount(PAGE_SIZE)
@@ -66,7 +96,14 @@ function App() {
 
   const regions = getRegions(exhibitions)
 
-  const baseList = view === 'favorites' ? favorites : exhibitions
+  const withPrice = (exhibition) =>
+    exhibition.id in prices
+      ? { ...exhibition, price: prices[exhibition.id] }
+      : exhibition
+
+  const baseList = (view === 'favorites' ? favorites : exhibitions).map(
+    withPrice
+  )
 
   // 찜 목록은 종료된 전시도 남겨 두고, 나머지 조건만 적용
   const filteredExhibitions = filterExhibitions(baseList, {
@@ -119,7 +156,14 @@ function App() {
           <form
             className="search-box"
             role="search"
-            onSubmit={(event) => event.preventDefault()}
+            onSubmit={(event) => {
+              // 검색은 입력하는 대로 바로 반영되므로, 버튼은 결과 목록으로 이동시킨다
+              event.preventDefault()
+              showView('all')
+              document
+                .getElementById('exhibitions')
+                ?.scrollIntoView({ behavior: 'smooth' })
+            }}
           >
             <label htmlFor="search" className="sr-only">
               전시명, 미술관, 지역 검색
@@ -191,9 +235,48 @@ function App() {
               >
                 이번 주말 관람 가능
               </button>
+
+              <button
+                type="button"
+                aria-pressed={filters.freeOnly}
+                className={filters.freeOnly ? 'is-active' : ''}
+                onClick={() => updateFilter('freeOnly', !filters.freeOnly)}
+              >
+                무료
+                {isPriceLoading && (
+                  <span className="chip-note">
+                    {priceProgress
+                      ? `확인 중 ${priceProgress.page}/${priceProgress.totalPages}`
+                      : '확인 중'}
+                  </span>
+                )}
+              </button>
             </div>
 
             <div className="filter-selects">
+              <div className="date-field">
+                <label htmlFor="visit-date">관람일</label>
+                <input
+                  id="visit-date"
+                  type="date"
+                  min={getTodayString()}
+                  value={filters.visitDate}
+                  onChange={(event) =>
+                    updateFilter('visitDate', event.target.value)
+                  }
+                />
+                {filters.visitDate && (
+                  <button
+                    type="button"
+                    className="date-clear"
+                    aria-label="관람일 선택 해제"
+                    onClick={() => updateFilter('visitDate', '')}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
               <label className="sr-only" htmlFor="region">지역</label>
               <select
                 id="region"
@@ -230,6 +313,16 @@ function App() {
           {!isLoading && !error && (
             <p className="result-summary" aria-live="polite">
               <strong>{filteredExhibitions.length}</strong>개의 전시
+              {filters.freeOnly && isPriceLoading && (
+                <span className="result-note">
+                  관람료를 확인하는 중이라 결과가 늘어날 수 있어요
+                </span>
+              )}
+              {filters.freeOnly && priceProgress?.failed && (
+                <span className="result-note">
+                  관람료 정보를 일부 불러오지 못했어요
+                </span>
+              )}
               {isFiltered && (
                 <button type="button" onClick={resetFilters}>
                   필터 초기화

@@ -1,5 +1,5 @@
 import { getExhibitionStatus } from '../utils/getExhibitionStatus'
-import { getDaysLeft } from '../utils/exhibitionFilters'
+import { getDaysLeft, getPriceLabel } from '../utils/exhibitionFilters'
 
 function ExhibitionCard({ exhibition, isFavorite, onToggleFavorite }) {
   const status = getExhibitionStatus(
@@ -8,6 +8,7 @@ function ExhibitionCard({ exhibition, isFavorite, onToggleFavorite }) {
   )
 
   const daysLeft = getDaysLeft(exhibition.endDate)
+  const priceLabel = getPriceLabel(exhibition)
 
   const linkUrl =
     `/api/culture-link?seq=${encodeURIComponent(exhibition.id)}` +
@@ -75,6 +76,14 @@ function ExhibitionCard({ exhibition, isFavorite, onToggleFavorite }) {
         <div className="exhibition-card-info">
           <span>{exhibition.region}</span>
           {exhibition.sigungu && <span>{exhibition.sigungu}</span>}
+          {priceLabel && (
+            <span
+              className={priceLabel === '무료' ? 'price-free' : ''}
+              title={exhibition.price || undefined}
+            >
+              {priceLabel}
+            </span>
+          )}
         </div>
       </div>
     </article>

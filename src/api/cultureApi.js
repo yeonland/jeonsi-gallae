@@ -26,6 +26,29 @@ function formatDate(dateString) {
   return `${dateString.slice(0, 4)}-${dateString.slice(4, 6)}-${dateString.slice(6, 8)}`
 }
 
+// 관람료는 페이지별로 나눠 받으며, 한 페이지가 올 때마다 onPage로 알려준다.
+// 상세 API 요청 제한 때문에 페이지는 하나씩 순서대로 요청한다.
+export async function getExhibitionPrices(onPage, signal) {
+  let page = 0
+  let totalPages = 1
+
+  while (page < totalPages) {
+    const response = await fetch(`/api/culture-prices?page=${page}`, {
+      signal,
+    })
+
+    if (!response.ok) {
+      throw new Error('관람료 정보를 불러오지 못했습니다.')
+    }
+
+    const data = await response.json()
+
+    totalPages = data.totalPages
+    onPage(data.prices, { page: page + 1, totalPages })
+    page += 1
+  }
+}
+
 export async function getCultureExhibitions() {
   const url = '/api/culture'
   const response = await fetch(url)
@@ -98,7 +121,8 @@ export async function getCultureExhibitions() {
         gpsY:
           item.querySelector('gpsY')?.textContent || '',
 
-        price: null,
+        // 관람료는 getExhibitionPrices로 따로 받아 합친다
+        price: undefined,
       }
     })
 
