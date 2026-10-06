@@ -3,11 +3,14 @@ import './App.css'
 import ExhibitionCard from './components/ExhibitionCard'
 import { getCultureExhibitions } from './api/cultureApi'
 
+const PAGE_SIZE = 12
+
 function App() {
   const [exhibitions, setExhibitions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   useEffect(() => {
     async function loadExhibitions() {
@@ -92,7 +95,10 @@ function App() {
               type="search"
               placeholder="전시명이나 미술관을 검색해 보세요"
               value={searchKeyword}
-              onChange={(event) => setSearchKeyword(event.target.value)}
+              onChange={(event) => {
+                setSearchKeyword(event.target.value)
+                setVisibleCount(PAGE_SIZE)
+              }}
             />
 
             <button type="submit">전시 찾기</button>
@@ -143,13 +149,32 @@ function App() {
 
             {!isLoading &&
               !error &&
-              filteredExhibitions.map((exhibition) => (
-                <ExhibitionCard
-                  key={exhibition.id}
-                  exhibition={exhibition}
-                />
-              ))}
+              filteredExhibitions
+                .slice(0, visibleCount)
+                .map((exhibition) => (
+                  <ExhibitionCard
+                    key={exhibition.id}
+                    exhibition={exhibition}
+                  />
+                ))}
           </div>
+
+          {!isLoading &&
+            !error &&
+            visibleCount < filteredExhibitions.length && (
+              <button
+                type="button"
+                className="load-more-button"
+                onClick={() =>
+                  setVisibleCount((count) => count + PAGE_SIZE)
+                }
+              >
+                더보기
+                <span>
+                  {visibleCount} / {filteredExhibitions.length}
+                </span>
+              </button>
+            )}
         </section>
       </main>
     </div>
